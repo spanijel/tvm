@@ -46,11 +46,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // NOTE: these lines are scanned by docker/dev_common.sh. Please update the regex as needed. -->
 ci_lint = "tlcpack/ci-lint:v0.67"
-ci_gpu = "tlcpack/ci-gpu:v0.79"
+ci_gpu = "tlcpack/ci-gpu:v0.81"
 ci_cpu = "tlcpack/ci-cpu:v0.80"
 ci_wasm = "tlcpack/ci-wasm:v0.71"
 ci_i386 = "tlcpack/ci-i386:v0.74"
-ci_qemu = "tlcpack/ci-qemu:v0.08"
+ci_qemu = "tlcpack/ci-qemu:v0.09"
 ci_arm = "tlcpack/ci-arm:v0.06"
 // <--- End of regex-scanned config.
 
@@ -389,10 +389,6 @@ stage('Test') {
             timeout(time: max_time, unit: 'MINUTES') {
               ci_setup(ci_gpu)
               sh (
-                script: "${docker_run} ${ci_gpu} ./tests/scripts/task_sphinx_precheck.sh",
-                label: 'Check Sphinx warnings in docs',
-              )
-              sh (
                 script: "${docker_run} ${ci_gpu} ./tests/scripts/task_java_unittest.sh",
                 label: 'Run Java unit tests',
               )
@@ -571,6 +567,7 @@ stage('Test') {
               label: 'Build docs',
             )
           }
+          pack_lib('docs', 'docs.tgz')
         }
       }
     }
@@ -599,7 +596,7 @@ stage('Deploy') {
     node('doc') {
       ws(per_exec_ws('tvm/deploy-docs')) {
         if (env.BRANCH_NAME == 'main') {
-        unpack_lib('mydocs', 'docs.tgz')
+        unpack_lib('docs', 'docs.tgz')
         sh 'cp docs.tgz /var/docs/docs.tgz'
         sh 'tar xf docs.tgz -C /var/docs'
         }
